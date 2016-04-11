@@ -85,6 +85,7 @@ public class PullLayout extends ViewGroup {
                 float dy = e.getY() - lastY;
                 // 新的偏移量
                 int newOffset = (int) (offset + dy);
+                newOffset = checkOffsetRange(newOffset);
                 changeOffset(newOffset);
                 break;
             case MotionEvent.ACTION_UP:
@@ -100,6 +101,14 @@ public class PullLayout extends ViewGroup {
         // 会导致 onLayout 的调用
         requestLayout();
     }
+
+    private int checkOffsetRange(int newOffset) {
+        newOffset = Math.min(300, newOffset);
+        newOffset = Math.max(0, newOffset);
+        return newOffset;
+    }
+
+    //
 
 
 //    newOffset = Math.min(300, newOffset);
