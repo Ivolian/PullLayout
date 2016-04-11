@@ -86,18 +86,24 @@ public class PullLayout extends ViewGroup {
 
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                // 把事件分发下去，但始终消费 DOWN 事件
+                super.dispatchTouchEvent(e);
                 break;
             case MotionEvent.ACTION_MOVE:
                 // 滑动距离
                 float dy = e.getY() - lastY;
                 // 阻力
                 dy = dy / 2;
-                // 新的偏移量
-                int newOffset = (int) (offset + dy);
-                newOffset = checkOffsetRange(newOffset);
-                changeOffset(newOffset);
+                // 最难的地方，谁来处理滑动事件
+                if (offset > 0 || offset == 0 && dy > 0 && content.getScrollY() == 0) {
+                    selfHandleMoveEvent(dy);
+                } else {
+                    return contentHandleMoveEvent(e);
+                }
                 break;
             case MotionEvent.ACTION_UP:
+                // 把事件分发下去，但始终消费 UP 事件
+                super.dispatchTouchEvent(e);
                 if (offset > 280) {
                     doYourLoadingAnimation();
                 } else {
@@ -107,6 +113,16 @@ public class PullLayout extends ViewGroup {
         }
         lastY = e.getY();
         return true;
+    }
+
+    private void selfHandleMoveEvent(float dy) {
+        int newOffset = (int) (offset + dy);
+        newOffset = checkOffsetRange(newOffset);
+        changeOffset(newOffset);
+    }
+
+    private boolean contentHandleMoveEvent(MotionEvent e) {
+        return super.dispatchTouchEvent(e);
     }
 
     private void changeOffset(int offset) {
