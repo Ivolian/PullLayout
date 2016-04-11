@@ -9,5 +9,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+//        PullLayout pullLayout = (PullLayout)findViewById(R.id.pullLayout);
+//        pullLayout.setScrollY(-200);
+
     }
 }

@@ -3,6 +3,7 @@ package ivolianer.pulllayout;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -46,9 +47,9 @@ public class PullLayout extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        Log.e("result", "PullLayout: " + l + " " + t + " " + r + " " + b + " ");
         layoutHeaderView();
         layoutContentView();
-        Log.e("result", "PullLayout: " + l + " " + t + " " + r + " " + b + " ");
     }
 
     private void layoutHeaderView() {
@@ -69,4 +70,38 @@ public class PullLayout extends ViewGroup {
         Log.e("result", "content: " + left + " " + top + " " + right + " " + bottom + " ");
     }
 
+
+    //
+
+    float lastY;
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent e) {
+        switch (e.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                break;
+            case MotionEvent.ACTION_MOVE:
+                // 滑动距离
+                float dy = e.getY() - lastY;
+                // 新的偏移量
+                int newOffset = (int) (offset + dy);
+                changeOffset(newOffset);
+                break;
+            case MotionEvent.ACTION_UP:
+                changeOffset(0);
+                break;
+        }
+        lastY = e.getY();
+        return true;
+    }
+
+    private void changeOffset(int offset) {
+        this.offset = offset;
+        // 会导致 onLayout 的调用
+        requestLayout();
+    }
+
+
+//    newOffset = Math.min(300, newOffset);
+//    newOffset = Math.max(0,newOffset);
 }
