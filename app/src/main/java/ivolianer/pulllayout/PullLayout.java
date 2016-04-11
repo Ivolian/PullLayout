@@ -1,5 +1,6 @@
 package ivolianer.pulllayout;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -77,19 +78,30 @@ public class PullLayout extends ViewGroup {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent e) {
+
+        if (animating) {
+            return false;
+        }
+
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 break;
             case MotionEvent.ACTION_MOVE:
                 // 滑动距离
                 float dy = e.getY() - lastY;
+                // 阻力
+                dy = dy / 2;
                 // 新的偏移量
                 int newOffset = (int) (offset + dy);
                 newOffset = checkOffsetRange(newOffset);
                 changeOffset(newOffset);
                 break;
             case MotionEvent.ACTION_UP:
-                changeOffset(0);
+                if (offset > 280) {
+                    doYourLoadingAnimation();
+                } else {
+                    clearOffset();
+                }
                 break;
         }
         lastY = e.getY();
@@ -109,6 +121,44 @@ public class PullLayout extends ViewGroup {
     }
 
     //
+
+    boolean animating = false;
+
+    private void doYourLoadingAnimation() {
+        // 缩放动画
+        ValueAnimator animator = ValueAnimator.ofFloat(0.9f, 1.1f, 0.9f, 1.1f, 0.9f, 1.1f, 0.9f, 1.1f, 1);
+        animator.setDuration(2000);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animator) {
+                float scale = (Float) animator.getAnimatedValue();
+                header.setScaleX(scale);
+                if (1 == animator.getAnimatedFraction()) {
+                    animating = false;
+                    clearOffset();
+                }
+            }
+        });
+        animator.start();
+        animating = true;
+    }
+
+    private void clearOffset() {
+        ValueAnimator animator = ValueAnimator.ofInt(offset, 0);
+        animator.setDuration(300);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animator) {
+                int currentOffset = (Integer) animator.getAnimatedValue();
+                changeOffset(currentOffset);
+                if (1 == animator.getAnimatedFraction()) {
+                    animating = false;
+                }
+            }
+        });
+        animator.start();
+        animating = true;
+    }
 
 
 //    newOffset = Math.min(300, newOffset);
