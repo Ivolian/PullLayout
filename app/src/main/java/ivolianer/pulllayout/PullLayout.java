@@ -3,7 +3,6 @@ package ivolianer.pulllayout;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,15 +25,14 @@ public class PullLayout extends ViewGroup {
     // 总偏移量
     int offset = 0;
 
-    View header;
+    View headerView;
 
-    View content;
+    View contentView;
 
     @Override
     protected void onFinishInflate() {
-        // 获取 header 和 content
-        header = getChildAt(0);
-        content = getChildAt(1);
+        headerView = getChildAt(0);
+        contentView = getChildAt(1);
         super.onFinishInflate();
     }
 
@@ -43,34 +41,29 @@ public class PullLayout extends ViewGroup {
         // 默认处理
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         measureChildren(widthMeasureSpec, heightMeasureSpec);
-//        Log.e("result", "onMeasure");
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-//        Log.e("result", "PullLayout: " + l + " " + t + " " + r + " " + b + " ");
         layoutHeaderView();
         layoutContentView();
     }
 
     private void layoutHeaderView() {
         final int left = 0;
-        final int top = offset - header.getMeasuredHeight();
-        final int right = left + header.getMeasuredWidth();
-        final int bottom = top + header.getMeasuredHeight();
-        header.layout(left, top, right, bottom);
-//        Log.e("result", "header: " + left + " " + top + " " + right + " " + bottom + " ");
+        final int top = offset - headerView.getMeasuredHeight();
+        final int right = left + headerView.getMeasuredWidth();
+        final int bottom = top + headerView.getMeasuredHeight();
+        headerView.layout(left, top, right, bottom);
     }
 
     private void layoutContentView() {
         final int left = 0;
         final int top = offset;
-        final int right = left + content.getMeasuredWidth();
-        final int bottom = top + content.getMeasuredHeight();
-        content.layout(left, top, right, bottom);
-//        Log.e("result", "content: " + left + " " + top + " " + right + " " + bottom + " ");
+        final int right = left + contentView.getMeasuredWidth();
+        final int bottom = top + contentView.getMeasuredHeight();
+        contentView.layout(left, top, right, bottom);
     }
-
 
     //
 
@@ -83,48 +76,49 @@ public class PullLayout extends ViewGroup {
         if (animating) {
             return false;
         }
-        boolean result = true;
+        boolean consumed = false;
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                // 把事件分发下去，但始终消费 DOWN 事件
-                super.dispatchTouchEvent(e);
+                // 把事件分发下去
+                consumed = contentView.dispatchTouchEvent(e);
+                // 如果没消费，则消费
+                if (!consumed) {
+                    consumed = true;
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 // 滑动距离
                 float dy = e.getY() - lastY;
-                Log.e("result","" + dy);
                 // 阻力
                 dy = dy / 2;
-                // 最难的地方，谁来处理滑动事件
-                if (offset > 0 || offset == 0 && dy > 0 && content.getScrollY() == 0) {
-                    selfHandleMoveEvent(dy);
+                // 最精彩的地方，谁来处理滑动事件
+                if (offset > 0 || offset == 0 && dy > 0 && contentView.getScrollY() == 0) {
+                    pull(dy);
+                    consumed = true;
                 } else {
-                    // 坑，千万不要用 return ，lastY 的每次赋值都很重要... 否则会突然滑动一段距离什么的...
-                    result = contentHandleMoveEvent(e);
+                    consumed = contentView.dispatchTouchEvent(e);
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                // 把事件分发下去，但始终消费 UP 事件
-                super.dispatchTouchEvent(e);
+                // 把事件分发下去
+                consumed = contentView.dispatchTouchEvent(e);
                 if (offset > 280) {
                     doYourLoadingAnimation();
-                } else {
+                    consumed = true;
+                } else if (offset > 0) {
                     clearOffset();
+                    consumed = true;
                 }
                 break;
         }
         lastY = e.getY();
-        return result;
+        return consumed;
     }
 
-    private void selfHandleMoveEvent(float dy) {
+    private void pull(float dy) {
         int newOffset = (int) (offset + dy);
         newOffset = checkOffsetRange(newOffset);
         changeOffset(newOffset);
-    }
-
-    private boolean contentHandleMoveEvent(MotionEvent e) {
-        return super.dispatchTouchEvent(e);
     }
 
     private void changeOffset(int offset) {
@@ -144,14 +138,13 @@ public class PullLayout extends ViewGroup {
     boolean animating = false;
 
     private void doYourLoadingAnimation() {
-        // 缩放动画
         ValueAnimator animator = ValueAnimator.ofFloat(0.9f, 1.1f, 0.9f, 1.1f, 0.9f, 1.1f, 0.9f, 1.1f, 1);
         animator.setDuration(2000);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animator) {
                 float scale = (Float) animator.getAnimatedValue();
-                header.setScaleX(scale);
+                headerView.setScaleX(scale);
                 if (1 == animator.getAnimatedFraction()) {
                     animating = false;
                     clearOffset();
@@ -179,7 +172,4 @@ public class PullLayout extends ViewGroup {
         animating = true;
     }
 
-
-//    newOffset = Math.min(300, newOffset);
-//    newOffset = Math.max(0,newOffset);
 }

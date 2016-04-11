@@ -18,7 +18,7 @@
             android:textColor="@android:color/white"
             android:textSize="20dp" />
 
-        <ScrollView
+        <ivolianer.pulllayout.MyView
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -37,7 +37,7 @@
 
             </LinearLayout>
 
-        </ScrollView>
+        </ivolianer.pulllayout.MyView>
 
     </ivolianer.pulllayout.PullLayout>
 
