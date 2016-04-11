@@ -43,12 +43,12 @@ public class PullLayout extends ViewGroup {
         // 默认处理
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         measureChildren(widthMeasureSpec, heightMeasureSpec);
-        Log.e("result", "onMeasure");
+//        Log.e("result", "onMeasure");
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        Log.e("result", "PullLayout: " + l + " " + t + " " + r + " " + b + " ");
+//        Log.e("result", "PullLayout: " + l + " " + t + " " + r + " " + b + " ");
         layoutHeaderView();
         layoutContentView();
     }
@@ -59,7 +59,7 @@ public class PullLayout extends ViewGroup {
         final int right = left + header.getMeasuredWidth();
         final int bottom = top + header.getMeasuredHeight();
         header.layout(left, top, right, bottom);
-        Log.e("result", "header: " + left + " " + top + " " + right + " " + bottom + " ");
+//        Log.e("result", "header: " + left + " " + top + " " + right + " " + bottom + " ");
     }
 
     private void layoutContentView() {
@@ -68,7 +68,7 @@ public class PullLayout extends ViewGroup {
         final int right = left + content.getMeasuredWidth();
         final int bottom = top + content.getMeasuredHeight();
         content.layout(left, top, right, bottom);
-        Log.e("result", "content: " + left + " " + top + " " + right + " " + bottom + " ");
+//        Log.e("result", "content: " + left + " " + top + " " + right + " " + bottom + " ");
     }
 
 
@@ -83,7 +83,7 @@ public class PullLayout extends ViewGroup {
         if (animating) {
             return false;
         }
-
+        boolean result = true;
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 // 把事件分发下去，但始终消费 DOWN 事件
@@ -92,13 +92,15 @@ public class PullLayout extends ViewGroup {
             case MotionEvent.ACTION_MOVE:
                 // 滑动距离
                 float dy = e.getY() - lastY;
+                Log.e("result","" + dy);
                 // 阻力
                 dy = dy / 2;
                 // 最难的地方，谁来处理滑动事件
                 if (offset > 0 || offset == 0 && dy > 0 && content.getScrollY() == 0) {
                     selfHandleMoveEvent(dy);
                 } else {
-                    return contentHandleMoveEvent(e);
+                    // 坑，千万不要用 return ，lastY 的每次赋值都很重要... 否则会突然滑动一段距离什么的...
+                    result = contentHandleMoveEvent(e);
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -112,7 +114,7 @@ public class PullLayout extends ViewGroup {
                 break;
         }
         lastY = e.getY();
-        return true;
+        return result;
     }
 
     private void selfHandleMoveEvent(float dy) {
