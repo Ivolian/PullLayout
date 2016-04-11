@@ -79,7 +79,7 @@ public class PullLayout extends ViewGroup {
         boolean consumed = false;
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                // 把事件分发下去
+                // 把事件分发下去，如果 ScrollView 不接受到 Down 事件，无法正确处理之后的事件
                 consumed = contentView.dispatchTouchEvent(e);
                 // 如果没消费，则消费
                 if (!consumed) {
@@ -100,14 +100,14 @@ public class PullLayout extends ViewGroup {
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                // 把事件分发下去
-                consumed = contentView.dispatchTouchEvent(e);
                 if (offset > 280) {
                     doYourLoadingAnimation();
                     consumed = true;
                 } else if (offset > 0) {
                     clearOffset();
                     consumed = true;
+                } else {
+                    consumed = contentView.dispatchTouchEvent(e);
                 }
                 break;
         }
