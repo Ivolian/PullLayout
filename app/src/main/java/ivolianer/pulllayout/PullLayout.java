@@ -79,6 +79,7 @@ public class PullLayout extends ViewGroup {
     @Override
     public boolean dispatchTouchEvent(MotionEvent e) {
 
+        // 执行动画过程，屏蔽所有事件
         if (animating) {
             return false;
         }
